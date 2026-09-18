@@ -1,0 +1,13 @@
+{
+  "transcript_source": "claude",
+  "backend": "mock",
+  "model": "",
+  "multi_skill_fanout": true,
+  "edit_budget": 4,
+  "gate_metric": "mixed",
+  "gate_no_regression": true,
+  "evidence_log": true,
+  "redact_secrets": true,
+  "preferences_base": "",
+  "preferences": ""
+}

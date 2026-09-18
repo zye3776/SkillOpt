@@ -67,6 +67,7 @@ all = [
 skillopt-train = "scripts.train:main"
 skillopt-eval = "scripts.eval_only:main"
 skillopt-sleep = "skillopt_sleep.__main__:main"
+skillopt-observe = "skillopt_observe.__main__:main"
 
 [project.urls]
 Homepage = "https://github.com/microsoft/SkillOpt"
@@ -78,7 +79,8 @@ Issues = "https://github.com/microsoft/SkillOpt/issues"
 # skillopt*      = the research package
 # skillopt_sleep = the open-source Sleep tool (decoupled, zero research dep)
 # skillopt_webui = the Gradio dashboard (installed via the `webui` extra)
-include = ["skillopt", "skillopt.*", "skillopt_sleep", "skillopt_sleep.*", "skillopt_webui", "skillopt_webui.*", "scripts*"]
+# skillopt_observe = offline session auditor built on skillopt_sleep (library use only)
+include = ["skillopt", "skillopt.*", "skillopt_sleep", "skillopt_sleep.*", "skillopt_webui", "skillopt_webui.*", "skillopt_observe", "skillopt_observe.*", "scripts*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.md"]

@@ -1,0 +1,26 @@
+{
+  "name": "example",
+  "target": "/absolute/path/to/your/project",
+  "scope": "invoked",
+  "transcripts_dir": "~/.claude/projects",
+  "backend": "mock",
+  "model": "",
+  "lookback_hours": 72,
+  "max_sessions": 300,
+  "llm": {
+    "enabled": true,
+    "max_sessions": 40,
+    "max_tokens": 900
+  },
+  "worktree_markers": [".bmad-loop/", "/worktrees/"],
+  "pipeline": {
+    "policy_file": ".bmad-loop/policy.toml",
+    "long_session_minutes": 150,
+    "hint_map": {}
+  },
+  "context_budget_chars": 40000,
+  "sleep": {
+    "target_skill_path": "sleep/learned/SKILL.md",
+    "preferences_top_n": 8
+  }
+}

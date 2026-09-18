@@ -54,6 +54,8 @@ nav:
     - Multi-skill Staging: sleep/multi-skill-staging.md
     - OpenAI-compatible Endpoints: sleep/openai-compatible-endpoints.md
     - Results: sleep/RESULTS.md
+  - Session Observer:
+    - Overview: observe.md
   - Extension Guides:
     - Add a New Benchmark: guide/new-benchmark.md
     - Local Environment Smoke Tests: guide/local-env-smoke.md

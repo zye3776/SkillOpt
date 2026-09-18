@@ -1,0 +1,13 @@
+{
+  "transcript_source": "claude",
+  "backend": "azure_openai",
+  "model": "glm-5.3",
+  "multi_skill_fanout": true,
+  "edit_budget": 4,
+  "gate_metric": "mixed",
+  "gate_no_regression": true,
+  "evidence_log": true,
+  "redact_secrets": true,
+  "preferences_base": "House rules for kenola: TypeScript + Bun over Python; object-oriented design; verify before claiming; where CLAUDE.md and the v4 architecture spine disagree, the spine is right; never write localhost, derive 127.0.0.1:3080 once; BMad skills are customized through _bmad/custom/*.toml, never by editing rendered bmad-* SKILL.md files.",
+  "preferences": "House rules for kenola: TypeScript + Bun over Python; object-oriented design; verify before claiming; where CLAUDE.md and the v4 architecture spine disagree, the spine is right; never write localhost, derive 127.0.0.1:3080 once; BMad skills are customized through _bmad/custom/*.toml, never by editing rendered bmad-* SKILL.md files."
+}

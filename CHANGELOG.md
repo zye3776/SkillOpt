@@ -7,6 +7,15 @@ All notable changes to SkillOpt are documented here. This project adheres to
 ## [Unreleased]
 
 ### Added
+- **`skillopt_observe` session auditor and per-project folders**: a new
+  package that reads finished Claude Code transcripts for one project, scans
+  the project's skills, agents, rules, hooks, MCP servers and BMad
+  customization points, and writes a report with file-targeted suggestions
+  (missed skill opportunities and why, inefficient detours, pipeline blocking
+  events, removal candidates, context health). It uses `skillopt_sleep` as a
+  library only; Sleep's config and state are redirected into
+  `projects/<name>/sleep/` by `python -m skillopt_observe sleep`, and audit
+  findings feed Sleep's `preferences` prior. See `docs/observe.md`.
 - **SkillOpt-Sleep paired A/B evalkit** (`python -m skillopt_sleep.evalkit`):
   McNemar plus percentile-bootstrap CIs on a fixed task manifest, with
   task-cluster multi-seed inference and seeded null calibration for exact-test

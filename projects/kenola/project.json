@@ -1,0 +1,33 @@
+{
+  "name": "kenola",
+  "target": "/Users/Z/projects/kenola",
+  "scope": "invoked",
+  "transcripts_dir": "~/.claude/projects",
+  "backend": "azure_openai",
+  "model": "glm-5.3",
+  "lookback_hours": 72,
+  "max_sessions": 400,
+  "llm": {
+    "enabled": true,
+    "max_sessions": 40,
+    "max_tokens": 900
+  },
+  "worktree_markers": [".bmad-loop/", "/worktrees/"],
+  "pipeline": {
+    "policy_file": ".bmad-loop/policy.toml",
+    "long_session_minutes": 150,
+    "hint_map": {
+      "hook_error": ".claude/hooks/*.sh or .bmad-loop/bmad_loop_hook.py",
+      "denial": ".bmad-loop/profiles/claude.toml bypass_args, .claude/settings.json permissions",
+      "nudge": ".bmad-loop/policy.toml stop_without_result_nudges / dev_stall_nudges / dev_contract_nudge",
+      "long_session": ".bmad-loop/policy.toml session_timeout_min / dev_stall_grace_s",
+      "prevented_continuation": ".bmad-loop/policy.toml dev_contract_nudge",
+      "agents_killed": ".bmad-loop/policy.toml workflow_stall_nudges_cap"
+    }
+  },
+  "context_budget_chars": 40000,
+  "sleep": {
+    "target_skill_path": "sleep/learned/SKILL.md",
+    "preferences_top_n": 8
+  }
+}
