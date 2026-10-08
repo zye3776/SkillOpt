@@ -3,8 +3,8 @@
   "target": "/absolute/path/to/your/project",
   "scope": "invoked",
   "transcripts_dir": "~/.claude/projects",
-  "backend": "mock",
-  "model": "",
+  "backend": "claude",
+  "model": "sonnet",
   "lookback_hours": 72,
   "max_sessions": 300,
   "llm": {
@@ -12,7 +12,10 @@
     "max_sessions": 40,
     "max_tokens": 900
   },
-  "worktree_markers": [".bmad-loop/", "/worktrees/"],
+  "worktree_markers": [
+    ".bmad-loop/",
+    "/worktrees/"
+  ],
   "pipeline": {
     "policy_file": ".bmad-loop/policy.toml",
     "long_session_minutes": 150,
@@ -22,5 +25,20 @@
   "sleep": {
     "target_skill_path": "sleep/learned/SKILL.md",
     "preferences_top_n": 8
+  },
+  "environment": {
+    "tools": [
+      "claude",
+      "bun",
+      "node",
+      "python3",
+      "git"
+    ],
+    "slow_hook_ms": 1500
+  },
+  "paperclip": {
+    "company": "",
+    "project": "",
+    "max_issues_per_run": 5
   }
 }

@@ -16,6 +16,14 @@ All notable changes to SkillOpt are documented here. This project adheres to
   library only; Sleep's config and state are redirected into
   `projects/<name>/sleep/` by `python -m skillopt_observe sleep`, and audit
   findings feed Sleep's `preferences` prior. See `docs/observe.md`.
+- **Claude Code plugin `skillopt-observe`** (`plugins/claude-code-observe/`):
+  `skillopt-analyst` and `skillopt-fixer` skills plus `/skillopt-audit`, thin
+  wrappers over the CLI; an environment section in the audit (tool versions,
+  duplicate or slow hooks, unused MCP servers and plugins); `summary` and
+  `projects` subcommands.
+- **Paperclip integration** (`plugins/paperclip/setup.py`): idempotent setup
+  of Analyst/Fixer `claude_local` agents and a daily routine from
+  `projects/<name>/paperclip/` definitions.
 - **SkillOpt-Sleep paired A/B evalkit** (`python -m skillopt_sleep.evalkit`):
   McNemar plus percentile-bootstrap CIs on a fixed task manifest, with
   task-cluster multi-seed inference and seeded null calibration for exact-test

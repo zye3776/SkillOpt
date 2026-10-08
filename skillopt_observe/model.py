@@ -148,6 +148,7 @@ class SessionRecord:
     agents_spawned: Dict[str, int] = field(default_factory=dict)
     mcp_tools: Dict[str, int] = field(default_factory=dict)
     hook_commands: Dict[str, int] = field(default_factory=dict)
+    hook_duration_ms: Dict[str, int] = field(default_factory=dict)  # summed per command
     hook_errors: int = 0
     hook_error_samples: List[str] = field(default_factory=list)
     denials: Dict[str, int] = field(default_factory=dict)
@@ -202,6 +203,7 @@ class AuditResult:
     blocking_events: Dict[str, Any] = field(default_factory=dict)
     removal_candidates: List[Dict[str, Any]] = field(default_factory=list)
     context_health: Dict[str, Any] = field(default_factory=dict)
+    environment: Dict[str, Any] = field(default_factory=dict)
     suggestions: List[Finding] = field(default_factory=list)
     notes: List[str] = field(default_factory=list)
 

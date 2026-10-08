@@ -302,3 +302,10 @@ the shipping CLI defaults.
   enforce a hard token or elapsed-time budget.
 - Treat real-backend transcript excerpts as data shared with the selected
   provider.
+
+## SkillOpt Observe (session auditor)
+
+Separate from Sleep: [`claude-code-observe/`](claude-code-observe) ships the
+`skillopt-analyst` and `skillopt-fixer` skills over the `skillopt_observe` CLI,
+and [`paperclip/`](paperclip) turns a Paperclip company into a thin scheduler
+and inbox for them. See `docs/observe.md`.

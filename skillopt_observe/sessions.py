@@ -229,6 +229,9 @@ class SessionReader:
                 if isinstance(info, dict) and info.get("command"):
                     cmd = str(info["command"])
                     rec.hook_commands[cmd] = rec.hook_commands.get(cmd, 0) + 1
+                    dur = info.get("durationMs")
+                    if isinstance(dur, (int, float)):
+                        rec.hook_duration_ms[cmd] = rec.hook_duration_ms.get(cmd, 0) + int(dur)
             errors = r.get("hookErrors") or []
             if isinstance(errors, list) and errors:
                 rec.hook_errors += len(errors)

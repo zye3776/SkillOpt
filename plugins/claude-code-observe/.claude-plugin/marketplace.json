@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "skillopt-observe",
+  "description": "SkillOpt Observe: audit a project's past Claude Code sessions and apply the resulting improvement suggestions, through two thin skills over the skillopt_observe CLI.",
+  "owner": {
+    "name": "SkillOpt contributors"
+  },
+  "plugins": [
+    {
+      "name": "skillopt-observe",
+      "description": "Analyst skill (audit sessions, report missed skills, detours, pipeline blockers, dead weight, environment health) and Fixer skill (apply one accepted suggestion as a branch + PR). Both wrap `python -m skillopt_observe`; nothing in them depends on Paperclip.",
+      "author": {
+        "name": "SkillOpt contributors"
+      },
+      "category": "productivity",
+      "source": ".",
+      "homepage": "https://github.com/microsoft/SkillOpt"
+    }
+  ]
+}

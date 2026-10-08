@@ -3,8 +3,8 @@
   "target": "/Users/Z/projects/kenola",
   "scope": "invoked",
   "transcripts_dir": "~/.claude/projects",
-  "backend": "azure_openai",
-  "model": "glm-5.3",
+  "backend": "claude",
+  "model": "sonnet",
   "lookback_hours": 72,
   "max_sessions": 400,
   "llm": {
@@ -12,7 +12,10 @@
     "max_sessions": 40,
     "max_tokens": 900
   },
-  "worktree_markers": [".bmad-loop/", "/worktrees/"],
+  "worktree_markers": [
+    ".bmad-loop/",
+    "/worktrees/"
+  ],
   "pipeline": {
     "policy_file": ".bmad-loop/policy.toml",
     "long_session_minutes": 150,
@@ -29,5 +32,25 @@
   "sleep": {
     "target_skill_path": "sleep/learned/SKILL.md",
     "preferences_top_n": 8
+  },
+  "environment": {
+    "tools": [
+      "claude",
+      "codex",
+      "pi",
+      "bun",
+      "node",
+      "python3",
+      "uv",
+      "gh",
+      "git",
+      "cargo"
+    ],
+    "slow_hook_ms": 1500
+  },
+  "paperclip": {
+    "company": "Kenola",
+    "project": "Kenola",
+    "max_issues_per_run": 5
   }
 }

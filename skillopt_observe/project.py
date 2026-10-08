@@ -76,6 +76,8 @@ class Project:
     long_session_minutes: int = 150
     sleep_target_skill_path: str = "sleep/learned/SKILL.md"
     preferences_top_n: int = 8
+    env_tools: List[str] = field(default_factory=list)  # empty = scanner default list
+    slow_hook_ms: int = 1500
     raw: Dict[str, Any] = field(default_factory=dict)
 
     # loading -------------------------------------------------------------
@@ -92,6 +94,7 @@ class Project:
         llm = data.get("llm") or {}
         pipeline = data.get("pipeline") or {}
         sleep = data.get("sleep") or {}
+        environment = data.get("environment") or {}
         hint_map = dict(DEFAULT_HINT_MAP)
         hint_map.update({str(k): str(v) for k, v in (pipeline.get("hint_map") or {}).items()})
         return cls(
@@ -114,6 +117,8 @@ class Project:
             long_session_minutes=int(pipeline.get("long_session_minutes", 150)),
             sleep_target_skill_path=str(sleep.get("target_skill_path") or "sleep/learned/SKILL.md"),
             preferences_top_n=int(sleep.get("preferences_top_n", 8)),
+            env_tools=[str(t) for t in (environment.get("tools") or [])],
+            slow_hook_ms=int(environment.get("slow_hook_ms", 1500)),
             raw=data,
         )
 

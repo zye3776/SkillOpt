@@ -1,0 +1,50 @@
+{
+  "agents": [
+    {
+      "name": "SkillOpt Analyst",
+      "role": "researcher",
+      "title": "Session auditor",
+      "adapterType": "claude_local",
+      "adapterConfig": {
+        "cwd": "{{SKILLOPT_HOME}}",
+        "model": "claude-sonnet-5",
+        "effort": "medium",
+        "engine": "cli",
+        "timeoutSec": 3600,
+        "env": {
+          "PATH": "{{PATH}}",
+          "SKILLOPT_HOME": "{{SKILLOPT_HOME}}"
+        }
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": false
+        }
+      },
+      "instructions": "analyst.AGENTS.md"
+    },
+    {
+      "name": "SkillOpt Fixer",
+      "role": "engineer",
+      "title": "Suggestion implementer",
+      "adapterType": "claude_local",
+      "adapterConfig": {
+        "cwd": "{{TARGET}}",
+        "model": "claude-fable-5-1",
+        "effort": "high",
+        "engine": "cli",
+        "timeoutSec": 5400,
+        "env": {
+          "PATH": "{{PATH}}",
+          "SKILLOPT_HOME": "{{SKILLOPT_HOME}}"
+        }
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": false
+        }
+      },
+      "instructions": "fixer.AGENTS.md"
+    }
+  ]
+}

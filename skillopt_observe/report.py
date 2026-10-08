@@ -56,8 +56,52 @@ class ReportWriter:
         parts.append(self._blocking())
         parts.append(self._removal())
         parts.append(self._context())
+        parts.append(self._environment())
         parts.append(self._suggestions(r.suggestions))
         return "\n".join(parts)
+
+    def summary_markdown(self, max_suggestions: int = 10) -> str:
+        """Short version for chat, issue comments and run logs."""
+        r = self.result
+        lanes = r.lanes
+        out = [f"**Session audit: {os.path.basename(r.project.rstrip('/'))}** — {r.n_sessions} sessions, "
+               f"{len(r.suggestions)} suggestions ({r.generated_at}).", ""]
+        rows = [[lane, d.get("sessions", 0), d.get("negative_rate", 0), d.get("hook_errors", 0), d.get("denials", 0)]
+                for lane, d in ((k, lanes.get(k) or {}) for k in ("main", "worktree"))]
+        out.append(_table(["lane", "sessions", "negative rate", "hook errors", "denials"], rows))
+        ch = r.context_health
+        if ch:
+            out.append(f"Always-loaded context: {ch.get('always_loaded_chars', 0)} chars "
+                       f"({'OVER' if ch.get('over_budget') else 'within'} budget {ch.get('budget_chars', 0)}); "
+                       f"skills {ch.get('n_skills', 0)}, deprecated {ch.get('n_skills_deprecated', 0)}.\n")
+        if r.missed_skills:
+            out.append("Missed skills: " + ", ".join(f"{m['skill']} ({m['count']}, {m['why']})" for m in r.missed_skills[:6]) + "\n")
+        top = sorted(r.suggestions, key=lambda f: -f.count)[:max_suggestions]
+        out.append("Top suggestions:\n")
+        out.append(_table(["kind", "target", "suggestion", "n", "apply via"],
+                          [[f.kind, f.target_file[:60], f.title[:90], f.count, f.apply_via[:60]] for f in top]))
+        if r.notes:
+            out.append("Notes: " + "; ".join(r.notes))
+        return "\n".join(out)
+
+    def _environment(self) -> str:
+        env = self.result.environment
+        if not env:
+            return "## Environment\n\n_not scanned_\n"
+        out = "## Environment\n\n### Tools\n\n" + _table(
+            ["tool", "found", "version"], [[k, v.get("found"), v.get("version", "")] for k, v in env.get("tools", {}).items()])
+        out += "\n### Hooks\n\n" + _table(
+            ["event", "command", "source", "registrations", "runs", "avg ms", "errors"],
+            [[h["event"], h["command"][:80], h["source"], h["registrations"], h["runs"], h["avg_ms"], h["errors"]] for h in env.get("hooks", [])])
+        mcp = env.get("mcp", {})
+        out += "\n### MCP servers\n\n" + _table(["configured server", "calls in sessions"], [[m["name"], m["calls"]] for m in mcp.get("configured", [])])
+        if mcp.get("used"):
+            out += "\nServers seen in sessions: " + ", ".join(f"{k} ({v})" for k, v in mcp["used"].items()) + "\n"
+        pl = env.get("plugins", {})
+        out += "\n### Plugins\n\n" + _table(["enabled plugin", "uses in sessions"], [[p["name"], p["uses"]] for p in pl.get("enabled", [])])
+        if pl.get("used"):
+            out += "\nPlugins seen in sessions: " + ", ".join(f"{k} ({v})" for k, v in pl["used"].items()) + "\n"
+        return out
 
     def _overview(self) -> str:
         lanes = self.result.lanes

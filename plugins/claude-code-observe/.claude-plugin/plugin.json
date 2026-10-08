@@ -1,0 +1,19 @@
+{
+  "name": "skillopt-observe",
+  "description": "Two thin skills over the skillopt_observe CLI: an Analyst that audits a project's past Claude Code sessions against its skills, agents, rules, hooks, MCP servers and BMad customizations and reports file-targeted suggestions, and a Fixer that applies one accepted suggestion as a branch plus pull request. Usable in any Claude Code session; Paperclip or cron are just callers.",
+  "version": "0.1.0",
+  "author": {
+    "name": "SkillOpt contributors"
+  },
+  "homepage": "https://github.com/microsoft/SkillOpt",
+  "repository": "https://github.com/microsoft/SkillOpt",
+  "license": "MIT",
+  "keywords": [
+    "skillopt",
+    "session-audit",
+    "developer-experience",
+    "skills",
+    "bmad",
+    "software-factory"
+  ]
+}

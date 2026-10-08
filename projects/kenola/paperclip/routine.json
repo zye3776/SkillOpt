@@ -1,0 +1,15 @@
+{
+  "title": "Daily SkillOpt analysis",
+  "description": "Audit yesterday's kenola Claude Code sessions with SkillOpt: missed skills and why, detours, bmad-build-auto blockers, dead-weight skills and context, environment health. Post the summary here and file [SkillOpt] suggestion issues in the project's backlog for triage. Runs at company level so the agent keeps its own working directory.",
+  "assignee": "SkillOpt Analyst",
+  "priority": "medium",
+  "concurrencyPolicy": "coalesce_if_active",
+  "catchUpPolicy": "skip_missed",
+  "trigger": {
+    "kind": "schedule",
+    "label": "nightly",
+    "cronExpression": "0 2 * * *",
+    "timezone": "Europe/London"
+  },
+  "company_level": true
+}

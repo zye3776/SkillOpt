@@ -80,3 +80,8 @@ projects/*/sleep/*.log
 projects/*/sleep/session-end.log
 projects/*/tasks/
 projects/*/reports/
+
+# Per-machine agent tooling that BMad/pi drop into any checkout at session start
+.agents/
+.pi/
+skills-lock.json

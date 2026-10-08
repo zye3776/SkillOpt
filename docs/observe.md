@@ -52,6 +52,25 @@ reaches any OpenAI-compatible provider), `lookback_hours` (0 = full history),
 `pipeline.{policy_file,long_session_minutes,hint_map}`, `context_budget_chars`,
 `sleep.{target_skill_path,preferences_top_n}`.
 
+## Claude Code plugin: Analyst and Fixer skills
+
+`plugins/claude-code-observe/` wraps the CLI in two skills usable in any
+session: `skillopt-analyst` (run an audit, present suggestions, report-only)
+and `skillopt-fixer` (apply one accepted suggestion on a `skillopt/<slug>`
+branch and open a PR). `/skillopt-audit` runs the analyst for the current
+directory. Install with `/plugin marketplace add ./plugins/claude-code-observe`
+then `/plugin install skillopt-observe@skillopt-observe`. The launcher
+`scripts/observe.sh` finds the checkout via `SKILLOPT_HOME` or its own location.
+
+## Paperclip: a thin scheduler and inbox
+
+`plugins/paperclip/setup.py` creates two `claude_local` agents (Analyst,
+Fixer) and a daily routine in a [Paperclip](https://github.com/paperclipai/paperclip)
+company from `projects/<name>/paperclip/`. The agents' instructions say "use the
+skill"; the Analyst comments the summary on its routine issue and files
+`[SkillOpt] …` suggestion issues in the backlog, a human assigns one to the
+Fixer, the Fixer delivers a PR. See `plugins/paperclip/README.md`.
+
 ## Audit
 
 ```bash
@@ -63,7 +82,10 @@ python -m skillopt_observe audit --project-dir projects/myapp --lookback-hours 0
 Output in `projects/myapp/reports/<ts>/`: `report.md`, `report.json`,
 `catalog.json`, `suggestions.json`. Sections: overview by lane (main vs
 worktree), usage, missed skill opportunities, inefficient patterns, blocking
-events, removal / merge candidates, context health, suggestions.
+events, removal / merge candidates, context health, environment (tool
+versions, duplicate or slow hooks with measured durations, MCP servers and
+plugins configured versus used), suggestions. `--print-summary` prints a short
+version; `summary` re-prints it for the latest report; `projects` lists folders.
 
 The deterministic layer needs no model. The model layer sends, per session, a
 compact summary (first prompt, user prompts, tool counts, skills, sub-agents,

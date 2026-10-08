@@ -1,7 +1,7 @@
 {
   "transcript_source": "claude",
-  "backend": "azure_openai",
-  "model": "glm-5.3",
+  "backend": "claude",
+  "model": "opus",
   "multi_skill_fanout": true,
   "edit_budget": 4,
   "gate_metric": "mixed",
