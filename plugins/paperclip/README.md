@@ -30,7 +30,7 @@ Variables substituted in all definition files: `SKILLOPT_HOME` (this
 checkout), `PROJECT_DIR`, `PROJECT_NAME`, `TARGET` (the audited repository),
 `PLUGIN_OBSERVE` (path of the Claude Code plugin), `PATH` (the setup shell's
 PATH, so the agent's Claude CLI finds the same tools), `MAX_ISSUES`,
-`PAPERCLIP_COMPANY`, `PAPERCLIP_PROJECT`.
+`PAPERCLIP_COMPANY`, `PAPERCLIP_PROJECT`, plus `PAPERCLIP_COMPANY_ID` and `PAPERCLIP_PROJECT_ID` once resolved.
 
 `project.json` carries the Paperclip targets:
 

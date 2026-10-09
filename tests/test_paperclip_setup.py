@@ -48,6 +48,10 @@ class FakeApi:
         self.calls.append(("PATCH", path, body))
         return {"id": path.rsplit("/", 1)[-1]}
 
+    def put(self, path, body):
+        self.calls.append(("PUT", path, body))
+        return {"ok": True}
+
 
 def _write_defs(d: str) -> None:
     with open(os.path.join(d, "agents.json"), "w", encoding="utf-8") as f:
@@ -61,7 +65,7 @@ def _write_defs(d: str) -> None:
         json.dump({"title": "Daily SkillOpt analysis", "assignee": "SkillOpt Analyst",
                    "trigger": {"kind": "schedule", "cronExpression": "0 2 * * *", "timezone": "UTC"}}, f)
     with open(os.path.join(d, "analyst.AGENTS.md"), "w", encoding="utf-8") as f:
-        f.write("# Analyst\nrun observe.sh audit --project-dir {{PROJECT_DIR}} (max {{MAX_ISSUES}})\n")
+        f.write("# Analyst\nrun observe.sh audit --project-dir {{PROJECT_DIR}} (max {{MAX_ISSUES}}) project {{PAPERCLIP_PROJECT_ID}}\n")
     with open(os.path.join(d, "fixer.AGENTS.md"), "w", encoding="utf-8") as f:
         f.write("# Fixer\nwork in {{TARGET}}\n")
 
@@ -100,17 +104,23 @@ class TestSetup(unittest.TestCase):
         self.assertEqual(routine_body["projectId"], "p1")
         self.assertEqual(posts[3][1]["cronExpression"], "0 2 * * *")
         self.assertEqual(result["agents"]["SkillOpt Fixer"], "a-SkillOpt Fixer")
+        # definitions are re-rendered with the resolved ids before agents are created
+        self.assertIn("project p1", posts[0][1]["instructionsBundle"]["files"]["AGENTS.md"])
         self.assertEqual(posts[0][1]["adapterType"], "claude_local")
 
     def test_rerun_updates_agents_and_leaves_routine(self):
         api = FakeApi(agents=[{"id": "a1", "name": "SkillOpt Analyst"}], routines=[{"id": "r9", "title": "Daily SkillOpt analysis"}])
         defs = setup_mod.Definitions(self.defs_dir, self.vars)
         result = setup_mod.SkillOptPaperclipSetup(api, defs, company="Kenola", project="Kenola").run()
-        methods = [(m, p) for m, p, _ in api.calls if m in ("POST", "PATCH")]
-        self.assertEqual(methods, [("PATCH", "/api/agents/a1"), ("POST", "/api/companies/c1/agents")])
+        methods = [(m, p) for m, p, _ in api.calls if m in ("POST", "PATCH", "PUT")]
+        self.assertEqual(methods, [("PATCH", "/api/agents/a1"), ("PUT", "/api/agents/a1/instructions-bundle/file"),
+                                   ("POST", "/api/companies/c1/agents")])
         patch_body = next(b for m, p, b in api.calls if m == "PATCH")
         self.assertNotIn("adapterType", patch_body)
-        self.assertIn("instructionsBundle", patch_body)
+        self.assertNotIn("instructionsBundle", patch_body)
+        put_body = next(b for m, p, b in api.calls if m == "PUT")
+        self.assertEqual(put_body["path"], "AGENTS.md")
+        self.assertIn("project p1", put_body["content"])
         self.assertEqual(result["routine"], "r9")
 
     def test_company_level_routine_has_no_project(self):

@@ -22,8 +22,9 @@ Every run:
 3. File suggestions for triage. Take the top {{MAX_ISSUES}} rows of `suggestions.json`
    by `count` whose `kind` is one of `skill_description`, `rule`, `claude_md`,
    `bmad_override`, `remove`, `merge`, `context`, `hook`, `policy`. For each one,
-   unless an open issue in the Paperclip project named `{{PAPERCLIP_PROJECT}}` already has the
-   title `[SkillOpt] <title>`, create an issue in that project (not on your own task): status `backlog`, **unassigned**, priority
+   unless an open issue in the Paperclip project `{{PAPERCLIP_PROJECT}}` (id `{{PAPERCLIP_PROJECT_ID}}`)
+   already has the title `[SkillOpt] <title>`, create one there with `"projectId": "{{PAPERCLIP_PROJECT_ID}}"`
+   (`POST $PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/issues`), never on your own task: status `backlog`, **unassigned**, priority
    `medium`, description containing `kind`, `target_file`, `apply_via`, `detail`,
    `why`, `evidence_sessions` and the line `Apply with the skillopt-fixer skill.`
    Never assign these issues yourself; a human assigns them to the SkillOpt Fixer.

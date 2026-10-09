@@ -17,7 +17,8 @@ Verified against Paperclip 2026.916 / server 0.3.1:
   POST /api/companies/:id/agents       (createAgentSchema: name, role, title,
                                         adapterType, adapterConfig,
                                         instructionsBundle{entryFile, files})
-  PATCH /api/agents/:id                (updateAgentSchema, partial)
+  PATCH /api/agents/:id                (updateAgentSchema, partial; bundle ignored)
+  PUT   /api/agents/:id/instructions-bundle/file  (path, content)
   POST /api/companies/:id/routines     (createRoutineSchema)
   POST /api/routines/:id/triggers      (kind schedule: cronExpression, timezone)
 
@@ -77,6 +78,9 @@ class PaperclipApi:
     def patch(self, path: str, body: Dict[str, Any]) -> Any:
         return self.request("PATCH", path, body)
 
+    def put(self, path: str, body: Dict[str, Any]) -> Any:
+        return self.request("PUT", path, body)
+
 
 class Definitions:
     """Load and render the definitions folder."""
@@ -123,7 +127,7 @@ class SkillOptPaperclipSetup:
 
     def __init__(self, api: PaperclipApi, defs: Definitions, *, company: str, project: str = "", dry_run: bool = False):
         self.api = api
-        self.defs = defs
+        self.defs = defs  # re-rendered in run() once the company/project ids are known
         self.company_ref = company
         self.project_ref = project
         self.dry_run = dry_run
@@ -151,10 +155,15 @@ class SkillOptPaperclipSetup:
         body = {k: spec[k] for k in self.AGENT_FIELDS if k in spec}
         match = next((a for a in existing if a.get("name") == spec["name"]), None)
         if match:
-            patch = {k: v for k, v in body.items() if k != "adapterType"}
-            self.actions.append(f"update agent {spec['name']} ({match['id']})")
+            # PATCH /agents/:id ignores instructionsBundle on existing agents; the
+            # managed bundle files are written through PUT .../instructions-bundle/file.
+            patch = {k: v for k, v in body.items() if k not in ("adapterType", "instructionsBundle")}
+            files = (spec.get("instructionsBundle") or {}).get("files") or {}
+            self.actions.append(f"update agent {spec['name']} ({match['id']}); files: {', '.join(files) or '-'}")
             if not self.dry_run:
                 self.api.patch(f"/api/agents/{match['id']}", patch)
+                for name, content in files.items():
+                    self.api.put(f"/api/agents/{match['id']}/instructions-bundle/file", {"path": name, "content": content})
             return str(match["id"])
         self.actions.append(f"create agent {spec['name']}")
         if self.dry_run:
@@ -204,6 +213,8 @@ class SkillOptPaperclipSetup:
         company = self.resolve_company()
         cid = str(company["id"])
         project = self.resolve_project(cid)
+        self.defs = Definitions(self.defs.dir, {**self.defs.vars, "PAPERCLIP_COMPANY_ID": cid,
+                                                "PAPERCLIP_PROJECT_ID": str(project["id"]) if project else ""})
         existing = self.api.get(f"/api/companies/{cid}/agents") or []
         agent_ids = {spec["name"]: self.ensure_agent(cid, spec, existing) for spec in self.defs.agents}
         routine_id = self.ensure_routine(cid, str(project["id"]) if project else None, agent_ids)
