@@ -13,12 +13,15 @@ There are three separately-installable packages in one repo, and they must stay 
 | `skillopt/` | Research engine (the paper's training loop) | `scripts/train.py` (`skillopt-train`), `scripts/eval_only.py` (`skillopt-eval`) |
 | `skillopt_sleep/` | SkillOpt-Sleep: nightly offline self-evolution for local coding agents. **Zero runtime dependency on `skillopt/`** (the validation gate is vendored in `skillopt_sleep/gate.py` and must stay behaviourally identical to `skillopt/evaluation/gate.py`). | `skillopt-sleep` (`skillopt_sleep/__main__.py`) |
 | `skillopt_webui/` | Gradio dashboard, installed via the `webui` extra | `python -m skillopt_webui.app` |
+| `skillopt_observe/` | **Fork-only addition** (see below): offline auditor of a project's Claude Code sessions; uses `skillopt_sleep` as a library, never edits it | `python -m skillopt_observe` |
 
 `plugins/` holds thin per-agent shells around `skillopt_sleep` (Claude Code, Codex, Cursor, Copilot, Devin, DSH; OpenClaw is an independent reference adaptation). They are shipped from the repo, not the wheel.
 
+This checkout is the fork `zye3776/SkillOpt` (remote `origin`); Microsoft's repo is remote `upstream`, used only for `git fetch upstream && git rebase upstream/main`. Everything under `skillopt_observe/`, `projects/`, `plugins/claude-code-observe/` and `plugins/paperclip/` is fork-only. **Never edit `skillopt/` or `skillopt_sleep/` for observer work**; redirect their behaviour at runtime instead (as `sleep_runner.py` does with `HOME_STATE_DIR`), so rebases stay conflict-free.
+
 ## Commands
 
-The docs use `python`; on this machine only `python3` (3.14) and `uv` are on PATH and no venv is set up, so create one first (`uv venv && source .venv/bin/activate`) or substitute `python3`.
+The docs use `python`; on this machine that means the repo's `.venv` (Python 3.12, created with `uv venv`), so run `source .venv/bin/activate` first. Outside the venv only `python3` (3.14) and `uv` are on PATH.
 
 ```bash
 python -m pip install -e ".[dev]"          # core + ruff + pytest
@@ -72,6 +75,53 @@ bash scripts/smoke_superpowers.sh   # manual, not CI: real Claude Code harness s
 One night = `cycle.py::run_sleep_cycle`: `harvest_sources.py` (per-agent harvesters `harvest_codex.py`, `harvest_copilot*.py`, `harvest_cursor.py`, `harvest_opencode.py`, `harvest_pi.py`; local, read-only) → `mine.py` / `llm_miner.py` (recurring tasks) → `replay.py` via a `backend.py` backend (`mock` and `handoff` make no network calls) → `consolidate.py` + `slow_update.py` (bounded edits) → `gate.py` on held-out real tasks → `staging.py` (proposal staged under the project, nothing live changes until `adopt`). `multi_skill.py` handles per-skill fan-out; `evidence.py` writes a redacted `evidence.jsonl`; `judges.py` / `evalkit.py` score replays; `state.py` tracks cycles; `scheduler.py` installs cron entries. Config is JSON via `config.py` (`SleepConfig`, `DEFAULTS`).
 
 Sleep reads only the Azure-family `AZURE_OPENAI_*` variables in compatibility mode (`--backend azure_openai`), not the research backend's per-role variables.
+
+## Session Observer (`skillopt_observe/`, fork-only)
+
+**What it does.** Reads a target project's finished Claude Code transcripts (`~/.claude/projects/<slug>/*.jsonl`, including worktree sessions) plus the project's catalog of skills, sub-agents, rules, hooks, MCP servers, plugins, BMad customizations and `.bmad-loop/policy.toml`, and writes an audit: what was used and how often; which catalogued skill should have been used but was not, and why (missing rule, vague description, not discoverable); detours; what blocked automated pipeline runs (hook errors, denials, stop hooks, "continue" nudges, killed sub-agents); dead weight (deprecated, never used, overlapping); always-loaded context size; environment health (tool versions, duplicate or slow hooks, MCP servers and plugins configured but unused). Every finding names a `target_file`, a `kind` and an `apply_via` hint, so the report is a to-do list. It runs after sessions end, never inside one, and never writes into the target. Full description: `docs/observe.md`.
+
+**Three layers, kept decoupled.** Callers (an interactive session, a Paperclip agent, cron) invoke a skill; the skill runs the CLI; the CLI uses Sleep as a library. Nothing in the engine or the skills knows about Paperclip.
+
+| Layer | Where | Notes |
+|---|---|---|
+| Engine | `skillopt_observe/` (`catalog.py`, `sessions.py`, `audit.py`, `environment.py`, `report.py`, `project.py`, `sleep_runner.py`, `__main__.py`) | Generic; every detector yields nothing when its input is absent |
+| Skills | `plugins/claude-code-observe/` → `skillopt-analyst` (audit, report-only), `skillopt-fixer` (apply one accepted suggestion on a `skillopt/<slug>` branch and open a PR), `/skillopt-audit` | Installed at user scope and read from this checkout; launcher `scripts/observe.sh` finds the repo via `SKILLOPT_HOME`, its own location, or by walking up |
+| Scheduler | `plugins/paperclip/setup.py` + `projects/<name>/paperclip/` | Creates two `claude_local` agents ("SkillOpt Analyst", "SkillOpt Fixer") and a daily routine from JSON definitions; idempotent |
+
+**Per-project data lives here, never under `~`.** `projects/<name>/` holds `project.json` (target path, `scope`, `backend`, `model`, `lookback_hours`, `llm.*`, `worktree_markers`, `pipeline.*`, `environment.tools`, `paperclip.*`), `env.example` / `.env` (gitignored), `sleep/config.json` (Sleep config incl. `preferences_base`, the hand-written house rules that survive regeneration), `sleep/learned/SKILL.md`, and gitignored `reports/<ts>/`, `tasks/`, `sleep/state/`, `sleep/evidence/`. `projects/kenola/` is the live example; `projects/_template/` is the scaffold.
+
+**Set up a new project**
+
+```bash
+source .venv/bin/activate
+python -m skillopt_observe init --project-dir projects/myapp --target /path/to/myapp
+cp projects/myapp/env.example projects/myapp/.env        # only needed for API-key backends
+printf '.skillopt-sleep/\n.skillopt-sleep-handoff/\n' >> /path/to/myapp/.gitignore   # Sleep's staging dir lives in the target
+claude plugin marketplace add ./plugins/claude-code-observe && claude plugin install skillopt-observe@skillopt-observe   # once per machine
+bash projects/myapp/paperclip/setup.sh --dry-run && bash projects/myapp/paperclip/setup.sh   # optional: Paperclip at 127.0.0.1:3100
+```
+
+The default backend is `claude` (the installed Claude CLI on a subscription, model `sonnet` for audits, `opus` for Sleep). **Never set `ANTHROPIC_API_KEY`** for it: Sleep's CLI backend adds `--bare` when that variable exists, which bypasses subscription auth.
+
+**Run**
+
+```bash
+python -m skillopt_observe audit --project-dir projects/kenola --print-summary   # catalog + sessions + environment + model judgements
+python -m skillopt_observe audit --project-dir projects/kenola --no-llm          # deterministic only, no model calls
+python -m skillopt_observe audit --project-dir projects/kenola --lookback-hours 0 --no-env --no-preferences
+python -m skillopt_observe summary --project-dir projects/kenola --top 10        # re-print the latest report
+python -m skillopt_observe projects                                              # list project folders
+python -m skillopt_observe sleep --project-dir projects/kenola -- dry-run --backend mock   # anything after -- goes to skillopt-sleep
+python -m skillopt_observe sleep --project-dir projects/kenola -- run
+python -m skillopt_observe preferences --project-dir projects/kenola             # rebuild Sleep's preferences prior from the last report
+bash plugins/claude-code-observe/scripts/observe.sh audit --project-dir projects/kenola   # same CLI through the launcher (what the skills call)
+```
+
+Output lands in `projects/<name>/reports/<ts>/` as `report.md`, `report.json`, `catalog.json`, `suggestions.json`. After each audit the top suggestions for `CLAUDE.md`, rules and custom skill descriptions are appended to Sleep's `preferences` (below `preferences_base`), so the next Sleep night proposes gated edits for exactly those points. Sleep's staging stays in `<target>/.skillopt-sleep/staging/` (hardcoded upstream; the runner mirrors each report into `reports/<ts>/sleep/`).
+
+**As an agent in a session.** To audit, use the `skillopt-analyst` skill (or `/skillopt-audit`); it is report-only. To apply one suggestion, use `skillopt-fixer` with the `suggestions.json` row or the `[SkillOpt] …` issue text: it works on a `skillopt/<slug>` branch in the target and opens a PR, never commits to the default branch, and only touches files inside the target project (findings that point at user-level `~/.claude/settings.json` are for the human). Suggestion kinds and where they land: `skill_description` / `rule` / `claude_md` → the named file in the target; `bmad_override` → `_bmad/custom/<skill>.toml` via the target's `bmad-customize` skill, **never** a rendered `bmad-*/SKILL.md`; `policy` → `.bmad-loop/policy.toml`; `hook` / `context` / `remove` / `merge` → the settings or skill folder named. In the Paperclip loop the Analyst files suggestions as unassigned backlog issues and a human assigns one to the Fixer.
+
+**Tests and gotchas.** `python -m pytest tests/test_observe_*.py tests/test_paperclip_setup.py -q` (pure stdlib, offline). Pytest collection and `gh`/`git push` need the sandbox disabled on this machine (`.env.example` stat and `~/.config/gh` are denied); commit with `--no-gpg-sign` (signing key unavailable). `tests/test_sleep_skill_resolver.py` fails only when external tooling drops `.agents/skills` into the checkout (gitignored); `tests/test_backend_pi.py::test_default_model_from_env` fails because `pi` is on PATH. A Paperclip routine for the Analyst must be company-level: a project routine makes `claude_local` run in the project workspace instead of this checkout.
 
 ## Conventions that matter here
 
